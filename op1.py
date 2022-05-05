@@ -1,4 +1,5 @@
 # 导入OpenCV
+from pickle import TRUE
 import cv2
 # 导入mediapipe
 import mediapipe as mp
@@ -25,13 +26,23 @@ class HandControlVolume:
         self.volume = cast(interface, POINTER(IAudioEndpointVolume))
         self.volume_range = self.volume.GetVolumeRange()
 
+        #初始化手势
+        self.hand_result = ''
+        
+        #手势测试值
+        self.sum_thumb=0.0
+        self.sum_index=0.0
+        self.sum_middle=0.0
+        self.sum_ring=0.0
+        self.sum_pinky=0.0
+        self.count=0
     #角度计算函数
     def angle_calc(a1,a2):
-        a1_x=a1[1]
-        a1_y=a1[2]
+        a1_x=a1[0]
+        a1_y=a1[1]
 
-        a2_x=a2[1]
-        a2_y=a2[2]
+        a2_x=a2[0]
+        a2_y=a2[1]
 
         try:
             angle= math.degrees(math.acos((a1_x*a2_x+a1_y*a2_y)/(((a1_x**2+a1_y**2)**0.5)*((a2_x**2+a2_y**2)**0.5))))
@@ -44,17 +55,65 @@ class HandControlVolume:
     #各个手指角度计算函数
     def hand_angle(hands):
         angle_list = {}
-        #---------------------------- thumb 大拇指角度
-        angle_thumb = angle_calc(
-            ((int(hands[0][0])- int(hands[2][0])),(int(hand_[0][1])-int(hand_[2][1]))),
-            ((int(hand_[3][0])- int(hand_[4][0])),(int(hand_[3][1])- int(hand_[4][1])))
-            )
-        angle_list['thumb',angle_thumb]
-        return
+        #------ thumb 大拇指角度
+        angle_thumb = HandControlVolume.angle_calc(
+                                ( (int(hands[1][1])- int(hands[2][1]))  ,  (int(hands[1][2])- int(hands[2][2]))  ),
+                                ( (int(hands[3][1])- int(hands[4][1]))  ,  (int(hands[3][2])- int(hands[4][2]))  )
+                            )
+        angle_list['thumb'] = angle_thumb
+
+        #------ index  食指角度
+        angle_index = HandControlVolume.angle_calc(
+            ( (int(hands[5][1])- int(hands[6][1]))  ,  (int(hands[5][2])- int(hands[6][2]))  ),
+            ( (int(hands[7][1])- int(hands[8][1]))  ,  (int(hands[7][2])- int(hands[8][2]))  )
+        )
+        angle_list['index'] = angle_index
+
+        #------ middle  中指角度
+        angle_middle = HandControlVolume.angle_calc(
+            ( (int(hands[9][1])- int(hands[10][1]))  ,  (int(hands[9][2])- int(hands[10][2]))  ),
+            ( (int(hands[11][1])- int(hands[12][1]))  ,  (int(hands[11][2])- int(hands[12][2]))  )
+        )
+        angle_list['middle'] = angle_middle
+
+        #------ ring  无名指角度
+        angle_ring = HandControlVolume.angle_calc(
+            ( (int(hands[13][1])- int(hands[14][1]))  ,  (int(hands[13][2])- int(hands[14][2]))  ),
+            ( (int(hands[15][1])- int(hands[16][1]))  ,  (int(hands[15][2])- int(hands[16][2]))  )
+        )
+        angle_list['ring'] = angle_ring
+
+        #------ pinky  无名指角度
+        angle_pinky = HandControlVolume.angle_calc(
+            ( (int(hands[17][1])- int(hands[18][1]))  ,  (int(hands[17][2])- int(hands[18][2]))  ),
+            ( (int(hands[19][1])- int(hands[20][1]))  ,  (int(hands[19][2])- int(hands[20][2]))  )
+        )
+        angle_list['pinky'] = angle_pinky
+
+        #------ index_middle  食指与中指角度
+        # angle_index_middle = HandControlVolume.angle_calc(
+        #     ( (int(hands[5][1])- int(hands[8][1]))  ,  (int(hands[5][2])- int(hands[8][2]))  ),
+        #     ( (int(hands[9][1])- int(hands[12][1]))  ,  (int(hands[9][2])- int(hands[12][2]))  )
+        # )
+        # angle_list['index_middle'] = angle_index_middle
+        return angle_list
+
+    #判断手指是否弯曲
+    def isbend(degree):
+        if 0<degree<10:
+            return False
+        if 50<degree<130:
+            return True
+
+    def hand_isbend(thumb,index,middle,ring,pinky):
+        if HandControlVolume.isbend(thumb)==True and HandControlVolume.isbend(index)==False and HandControlVolume.isbend(middle)==True and HandControlVolume.isbend(ring)==True and HandControlVolume.isbend(pinky)==True:
+            return "1"
+
+        if HandControlVolume.isbend(thumb)==True and HandControlVolume.isbend(index)==False and HandControlVolume.isbend(middle)==False and HandControlVolume.isbend(ring)==True and HandControlVolume.isbend(pinky)==True:
+            return "2"
+        return "0"
     # 主函数
     def recognize(self):
-        # 计算刷新率
-        fpsTime = time.time()
 
         # OpenCV读取视频流
         cap = cv2.VideoCapture(0)
@@ -100,10 +159,43 @@ class HandControlVolume:
 
                         # 解析手指，存入各个手指坐标
                         landmark_list = []
+                        landmark_list_pm=[]
                         for landmark_id, finger_axis in enumerate(hand_landmarks.landmark):
                             landmark_list.append(
                                 [landmark_id, finger_axis.x, finger_axis.y,finger_axis.z]
                                 )
+
+                            landmark_list_pm.append(
+                                [landmark_id, math.ceil(finger_axis.x* resize_w), math.ceil(finger_axis.y* resize_h)]
+                                )
+                        
+                        #手指角度
+                        self.hand_result = ''
+                        hand_angle_dict = HandControlVolume.hand_angle(landmark_list_pm)
+ 
+                        #手势值分析 得出结果以20为误差范围
+                        self.sum_thumb = self.sum_thumb + hand_angle_dict['thumb']
+                        self.sum_index = self.sum_index + hand_angle_dict['index']
+                        self.sum_middle = self.sum_middle + hand_angle_dict['middle']
+                        self.sum_ring = self.sum_ring + hand_angle_dict['ring']
+                        self.sum_pinky = self.sum_pinky + hand_angle_dict['pinky']
+
+
+                        self.count = self.count +1
+
+                        self.hand_result=HandControlVolume.hand_isbend(hand_angle_dict['thumb'],hand_angle_dict['index'],hand_angle_dict['middle'],hand_angle_dict['ring'],hand_angle_dict['pinky'])
+                        #解析手指手势
+                        # #1
+                        # if hand_angle_dict['thumb'] > 100 and hand_angle_dict['index'] < 10 and hand_angle_dict['middle'] > 100 and hand_angle_dict['ring'] and hand_angle_dict['pinky'] > 100:
+                        #     self.hand_result = '1'
+
+                        # #2
+                        # if hand_angle_dict['thumb'] > 100 and hand_angle_dict['index'] < 20 and hand_angle_dict['middle'] < 50 and hand_angle_dict['ring'] < 30 and hand_angle_dict['pinky'] < 50:
+                        #     self.hand_result = '2'
+                        
+                        
+
+                        print(hand_angle_dict)
 
                         if landmark_list:
                             # 获取大拇指指尖坐标
@@ -119,12 +211,12 @@ class HandControlVolume:
                             # print(thumb_finger_tip_x)
                             thumb_finger_point = (thumb_finger_tip_x,thumb_finger_tip_y)
                             index_finger_point = (index_finger_tip_x,index_finger_tip_y)
-                            # 画指尖2点
-                            image = cv2.circle(image,thumb_finger_point,10,(255,0,255),-1)
-                            image = cv2.circle(image,index_finger_point,10,(255,0,255),-1)
-                            image = cv2.circle(image,finger_middle_point,10,(255,0,255),-1)
-                            # 画2点连线
-                            image = cv2.line(image,thumb_finger_point,index_finger_point,(255,0,255),5)
+                            # # 画指尖2点
+                            # image = cv2.circle(image,thumb_finger_point,10,(255,0,255),-1)
+                            # image = cv2.circle(image,index_finger_point,10,(255,0,255),-1)
+                            # image = cv2.circle(image,finger_middle_point,10,(255,0,255),-1)
+                            # # 画2点连线
+                            # image = cv2.line(image,thumb_finger_point,index_finger_point,(255,0,255),5)
                             # 勾股定理计算长度
                             line_len = math.hypot((index_finger_tip_x-thumb_finger_tip_x),(index_finger_tip_y-thumb_finger_tip_y))
 
@@ -146,14 +238,11 @@ class HandControlVolume:
                 image = cv2.rectangle(image,(30,100),(60,300),(255, 0, 0),3)
                 image = cv2.rectangle(image,(30,math.ceil(300-rect_height)),(60,300),(255, 0, 0),-1)
 
-                # 显示刷新率FPS
-                cTime = time.time()
-                fps_text = 1/(cTime-fpsTime)
-                fpsTime = cTime
-                cv2.putText(image, "FPS: " + str(int(fps_text)), (10, 70),cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0),3)
+                cv2.putText(image, "hand_result:  "+self.hand_result, (10, 70),cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255),3)
                 # 显示画面
                 cv2.imshow('volume controll', image)
                 if cv2.waitKey(5) & 0xFF == 113:
+                    print(f'大拇指平均值：{self.sum_thumb/self.count}  食指平均值：{self.sum_index/self.count}  中指平均值：{self.sum_middle/self.count}  无名指平均值：{self.sum_ring/self.count}  小拇指平均值：{self.sum_pinky/self.count}  ')
                     break
             cap.release()
 
