@@ -99,18 +99,18 @@ class HandControlVolume:
         return angle_list
 
     #判断手指是否弯曲q
-    def vertify(finger,degree):
-        if degree-20<finger<degree+20:
+    def vertify(finger,mi,ma):
+        if mi<finger<ma:
             return True
         else:
             return False
 
     def hand_vertify(thumb,index,middle,ring,pinky):
-        if HandControlVolume.vertify(thumb,133.4) and HandControlVolume.vertify(index,5.9) and HandControlVolume.vertify(middle,93.7) and HandControlVolume.vertify(ring,98.55) and HandControlVolume.vertify(pinky,63.25):
+        if HandControlVolume.vertify(thumb,96.8,162.5) and HandControlVolume.vertify(index,0.0,7.4) and HandControlVolume.vertify(middle,90.7,146.5) and HandControlVolume.vertify(ring,75.7,147.5) and HandControlVolume.vertify(pinky,76.4,156.2):
             return "1"
 
-        # if HandControlVolume.vertify(thumb) and HandControlVolume.vertify(index) and HandControlVolume.vertify(middle) and HandControlVolume.vertify(ring) and HandControlVolume.vertify(pinky):
-        #     return "2"
+        if HandControlVolume.vertify(thumb,98.7,162.1) and HandControlVolume.vertify(index,0.1,9.9) and HandControlVolume.vertify(middle,0.0,10.0) and HandControlVolume.vertify(ring,16.1,89.7) and HandControlVolume.vertify(pinky,2.1,25.0):
+            return "2"
         return "0"
     # 主函数
     def recognize(self):
@@ -241,7 +241,11 @@ class HandControlVolume:
                 # 显示画面
                 cv2.imshow('volume controll', image)
                 if cv2.waitKey(5) & 0xFF == 113:
-                    print(f'大拇指平均值：{np.average(self.sum_thumb)}  食指平均值：{np.average(self.sum_index)}  中指平均值：{np.average(self.sum_middle)}  无名指平均值：{np.average(self.sum_ring)}  小拇指平均值：{np.average(self.sum_pinky)}  ')
+                    print(f'大拇指平均值：{np.average(self.sum_thumb)}  最小值：{min(self.sum_thumb)}  最大值：{max(self.sum_thumb)}')  
+                    print(f'食指平均值：{np.average(self.sum_index)}最小值：{min(self.sum_index)}  最大值：{max(self.sum_index)}  ')  
+                    print(f'中指平均值：{np.average(self.sum_middle)}最小值：{min(self.sum_middle)}  最大值：{max(self.sum_middle)}  ')  
+                    print(f'无名指平均值：{np.average(self.sum_ring)}最小值：{min(self.sum_ring)}  最大值：{max(self.sum_ring)}  ')
+                    print(f'小拇指平均值：{np.average(self.sum_pinky)}最小值：{min(self.sum_pinky)}  最大值：{max(self.sum_pinky)}  ')
                     break
             cap.release()
 
