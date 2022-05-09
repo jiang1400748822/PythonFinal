@@ -36,6 +36,9 @@ class HandControlVolume:
         self.sum_ring=[]
         self.sum_pinky=[]
 
+        #手势模式
+        self.model = 0
+
     #角度计算函数
     def angle_calc(a1,a2):
         a1_x=a1[0]
@@ -90,12 +93,6 @@ class HandControlVolume:
         )
         angle_list['pinky'] = angle_pinky
 
-        #------ index_middle  食指与中指角度
-        # angle_index_middle = HandControlVolume.angle_calc(
-        #     ( (int(hands[5][1])- int(hands[8][1]))  ,  (int(hands[5][2])- int(hands[8][2]))  ),
-        #     ( (int(hands[9][1])- int(hands[12][1]))  ,  (int(hands[9][2])- int(hands[12][2]))  )
-        # )
-        # angle_list['index_middle'] = angle_index_middle
         return angle_list
 
     #判断手指是否弯曲q
@@ -133,12 +130,6 @@ class HandControlVolume:
             return True
             
     def hand_vertify(thumb,index,middle,ring,pinky):
-        # if HandControlVolume.vertify(thumb,96.8,162.5) and HandControlVolume.vertify(index,0.0,7.4) and HandControlVolume.vertify(middle,90.7,146.5) and HandControlVolume.vertify(ring,75.7,147.5) and HandControlVolume.vertify(pinky,76.4,156.2):
-        #     return "1"
-
-        # if HandControlVolume.vertify(thumb,98.7,162.1) and HandControlVolume.vertify(index,0.1,9.9) and HandControlVolume.vertify(middle,0.0,10.0) and HandControlVolume.vertify(ring,16.1,89.7) and HandControlVolume.vertify(pinky,2.1,25.0):
-        #     return "2"
-        # return "0"
         if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
             return "1"
         if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
@@ -163,7 +154,6 @@ class HandControlVolume:
 
     # 主函数
     def recognize(self):
-
         # OpenCV读取视频流
         cap = cv2.VideoCapture(0)
         # 视频分辨率
@@ -183,6 +173,12 @@ class HandControlVolume:
                     print("空帧.")
                     continue
                 #print(image)
+                #手势识别模式切换
+                if cv2.waitKey(2) & 0xFF == 109:
+                    if self.model == 1:
+                        self.model = 0
+                    else:
+                        self.model = 1
                 # 令数组只读
                 image.flags.writeable = False
                 # 转为RGB
@@ -222,7 +218,7 @@ class HandControlVolume:
                         self.hand_result = ''
                         hand_angle_dict = HandControlVolume.hand_angle(landmark_list_pm)
  
-                        #手势值分析 得出结果以20为误差范围
+                        #手势值分析 
                         self.sum_thumb.append(hand_angle_dict['thumb'])
                         self.sum_index.append(hand_angle_dict['index'])
                         self.sum_middle.append(hand_angle_dict['middle'])
@@ -230,9 +226,44 @@ class HandControlVolume:
                         self.sum_pinky.append(hand_angle_dict['pinky'])
 
 
+                        if self.model==1:
+                            self.hand_result=HandControlVolume.hand_vertify(hand_angle_dict['thumb'],hand_angle_dict['index'],hand_angle_dict['middle'],hand_angle_dict['ring'],hand_angle_dict['pinky'])
+                            if self.hand_result=="1":
+                                self.volume.SetMasterVolumeLevel(-58.725, None)
+                                rect_percent_text = 10
 
-                        self.hand_result=HandControlVolume.hand_vertify(hand_angle_dict['thumb'],hand_angle_dict['index'],hand_angle_dict['middle'],hand_angle_dict['ring'],hand_angle_dict['pinky'])
-                        
+                            if self.hand_result=="2":
+                                self.volume.SetMasterVolumeLevel(-52.2, None)
+                                rect_percent_text = 20
+
+                            if self.hand_result=="3":
+                                self.volume.SetMasterVolumeLevel(-45.675, None)
+                                rect_percent_text = 30
+
+                            if self.hand_result=="4":
+                                self.volume.SetMasterVolumeLevel(-39.15, None)
+                                rect_percent_text = 40
+
+                            if self.hand_result=="5":
+                                self.volume.SetMasterVolumeLevel(-32.625, None)
+                                rect_percent_text = 50
+
+                            if self.hand_result=="6":
+                                self.volume.SetMasterVolumeLevel(-26.1, None)
+                                rect_percent_text = 60
+                                
+                            if self.hand_result=="7":
+                                self.volume.SetMasterVolumeLevel(-19.575, None)
+                                rect_percent_text = 70
+
+                            if self.hand_result=="8":
+                                self.volume.SetMasterVolumeLevel(-13.05, None)
+                                rect_percent_text = 80
+
+                            if self.hand_result=="9":
+                                self.volume.SetMasterVolumeLevel(-6.525, None)
+                                rect_percent_text = 90
+                            rect_height = 2*rect_percent_text
 
                         print(hand_angle_dict)
 
@@ -249,28 +280,28 @@ class HandControlVolume:
                             finger_middle_point = (thumb_finger_tip_x+index_finger_tip_x)//2, (thumb_finger_tip_y+index_finger_tip_y)//2
                             # print(thumb_finger_tip_x)
                             thumb_finger_point = (thumb_finger_tip_x,thumb_finger_tip_y)
-                            index_finger_point = (index_finger_tip_x,index_finger_tip_y)
-                            # # 画指尖2点
-                            # image = cv2.circle(image,thumb_finger_point,10,(255,0,255),-1)
-                            # image = cv2.circle(image,index_finger_point,10,(255,0,255),-1)
-                            # image = cv2.circle(image,finger_middle_point,10,(255,0,255),-1)
-                            # # 画2点连线
-                            # image = cv2.line(image,thumb_finger_point,index_finger_point,(255,0,255),5)
-                            # 勾股定理计算长度
-                            line_len = math.hypot((index_finger_tip_x-thumb_finger_tip_x),(index_finger_tip_y-thumb_finger_tip_y))
+                            index_finger_point = (index_finger_tip_x,index_finger_tip_y) 
+                            if self.model==0:
+                            # 画指尖2点
+                                image = cv2.circle(image,thumb_finger_point,10,(255,0,255),-1)
+                                image = cv2.circle(image,index_finger_point,10,(255,0,255),-1)
+                                image = cv2.circle(image,finger_middle_point,10,(255,0,255),-1)
+                                # 画2点连线
+                                image = cv2.line(image,thumb_finger_point,index_finger_point,(255,0,255),5)
+                                #勾股定理计算长度
+                                line_len = math.hypot((index_finger_tip_x-thumb_finger_tip_x),(index_finger_tip_y-thumb_finger_tip_y))
+                                # 获取电脑最大最小音量
+                                min_volume = self.volume_range[0]
+                                max_volume = self.volume_range[1]
+                                #print(f"最小音量：{self.volume_range[0]}  最大音量：{self.volume_range[1]}")
+                                # 将指尖长度映射到音量上
+                                vol = np.interp(line_len,[50,300],[min_volume,max_volume])
+                                # 将指尖长度映射到矩形显示上
+                                rect_height = np.interp(line_len,[50,300],[0,200])
+                                rect_percent_text = np.interp(line_len,[50,300],[0,100])
 
-                            # 获取电脑最大最小音量
-                            min_volume = self.volume_range[0]
-                            max_volume = self.volume_range[1]
-                            #print(f"最小音量：{self.volume_range[0]}  最大音量：{self.volume_range[1]}")
-                            # 将指尖长度映射到音量上
-                            vol = np.interp(line_len,[50,300],[min_volume,max_volume])
-                            # 将指尖长度映射到矩形显示上
-                            rect_height = np.interp(line_len,[50,300],[0,200])
-                            rect_percent_text = np.interp(line_len,[50,300],[0,100])
-
-                            # 设置电脑音量
-                            self.volume.SetMasterVolumeLevel(vol, None)
+                                # 设置电脑音量
+                                self.volume.SetMasterVolumeLevel(vol, None)
 
                 # 显示矩形
                 cv2.putText(image, str(math.ceil(rect_percent_text))+"%", (20, 350),cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), 3)
@@ -280,7 +311,7 @@ class HandControlVolume:
                 cv2.putText(image, "hand_result:  "+self.hand_result, (10, 70),cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 255),3)
                 # 显示画面
                 cv2.imshow('volume controll', image)
-                if cv2.waitKey(5) & 0xFF == 113:
+                if cv2.waitKey(3) & 0xFF == 113:
                     print(f'大拇指平均值：{np.average(self.sum_thumb)}  最小值：{min(self.sum_thumb)}  最大值：{max(self.sum_thumb)}')  
                     print(f'食指平均值：{np.average(self.sum_index)}最小值：{min(self.sum_index)}  最大值：{max(self.sum_index)}  ')  
                     print(f'中指平均值：{np.average(self.sum_middle)}最小值：{min(self.sum_middle)}  最大值：{max(self.sum_middle)}  ')  
