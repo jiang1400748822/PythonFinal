@@ -30,12 +30,12 @@ class HandControlVolume:
         self.hand_result = ''
         
         #手势测试值
-        self.sum_thumb=0.0
-        self.sum_index=0.0
-        self.sum_middle=0.0
-        self.sum_ring=0.0
-        self.sum_pinky=0.0
-        self.count=0
+        self.sum_thumb=[]
+        self.sum_index=[]
+        self.sum_middle=[]
+        self.sum_ring=[]
+        self.sum_pinky=[]
+
     #角度计算函数
     def angle_calc(a1,a2):
         a1_x=a1[0]
@@ -98,19 +98,19 @@ class HandControlVolume:
         # angle_list['index_middle'] = angle_index_middle
         return angle_list
 
-    #判断手指是否弯曲
-    def isbend(degree):
-        if 0<degree<10:
-            return False
-        if 50<degree<130:
+    #判断手指是否弯曲q
+    def vertify(finger,degree):
+        if degree-20<finger<degree+20:
             return True
+        else:
+            return False
 
-    def hand_isbend(thumb,index,middle,ring,pinky):
-        if HandControlVolume.isbend(thumb)==True and HandControlVolume.isbend(index)==False and HandControlVolume.isbend(middle)==True and HandControlVolume.isbend(ring)==True and HandControlVolume.isbend(pinky)==True:
+    def hand_vertify(thumb,index,middle,ring,pinky):
+        if HandControlVolume.vertify(thumb,133.4) and HandControlVolume.vertify(index,5.9) and HandControlVolume.vertify(middle,93.7) and HandControlVolume.vertify(ring,98.55) and HandControlVolume.vertify(pinky,63.25):
             return "1"
 
-        if HandControlVolume.isbend(thumb)==True and HandControlVolume.isbend(index)==False and HandControlVolume.isbend(middle)==False and HandControlVolume.isbend(ring)==True and HandControlVolume.isbend(pinky)==True:
-            return "2"
+        # if HandControlVolume.vertify(thumb) and HandControlVolume.vertify(index) and HandControlVolume.vertify(middle) and HandControlVolume.vertify(ring) and HandControlVolume.vertify(pinky):
+        #     return "2"
         return "0"
     # 主函数
     def recognize(self):
@@ -174,16 +174,15 @@ class HandControlVolume:
                         hand_angle_dict = HandControlVolume.hand_angle(landmark_list_pm)
  
                         #手势值分析 得出结果以20为误差范围
-                        self.sum_thumb = self.sum_thumb + hand_angle_dict['thumb']
-                        self.sum_index = self.sum_index + hand_angle_dict['index']
-                        self.sum_middle = self.sum_middle + hand_angle_dict['middle']
-                        self.sum_ring = self.sum_ring + hand_angle_dict['ring']
-                        self.sum_pinky = self.sum_pinky + hand_angle_dict['pinky']
+                        self.sum_thumb.append(hand_angle_dict['thumb'])
+                        self.sum_index.append(hand_angle_dict['index'])
+                        self.sum_middle.append(hand_angle_dict['middle'])
+                        self.sum_ring.append(hand_angle_dict['ring'])
+                        self.sum_pinky.append(hand_angle_dict['pinky'])
 
 
-                        self.count = self.count +1
 
-                        self.hand_result=HandControlVolume.hand_isbend(hand_angle_dict['thumb'],hand_angle_dict['index'],hand_angle_dict['middle'],hand_angle_dict['ring'],hand_angle_dict['pinky'])
+                        self.hand_result=HandControlVolume.hand_vertify(hand_angle_dict['thumb'],hand_angle_dict['index'],hand_angle_dict['middle'],hand_angle_dict['ring'],hand_angle_dict['pinky'])
                         #解析手指手势
                         # #1
                         # if hand_angle_dict['thumb'] > 100 and hand_angle_dict['index'] < 10 and hand_angle_dict['middle'] > 100 and hand_angle_dict['ring'] and hand_angle_dict['pinky'] > 100:
@@ -242,7 +241,7 @@ class HandControlVolume:
                 # 显示画面
                 cv2.imshow('volume controll', image)
                 if cv2.waitKey(5) & 0xFF == 113:
-                    print(f'大拇指平均值：{self.sum_thumb/self.count}  食指平均值：{self.sum_index/self.count}  中指平均值：{self.sum_middle/self.count}  无名指平均值：{self.sum_ring/self.count}  小拇指平均值：{self.sum_pinky/self.count}  ')
+                    print(f'大拇指平均值：{np.average(self.sum_thumb)}  食指平均值：{np.average(self.sum_index)}  中指平均值：{np.average(self.sum_middle)}  无名指平均值：{np.average(self.sum_ring)}  小拇指平均值：{np.average(self.sum_pinky)}  ')
                     break
             cap.release()
 
