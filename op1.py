@@ -99,19 +99,68 @@ class HandControlVolume:
         return angle_list
 
     #判断手指是否弯曲q
-    def vertify(finger,mi,ma):
-        if mi<finger<ma:
-            return True
-        else:
+    def vertify_thumb(finger):
+        # if mi<finger<ma:
+        #     return True
+        # else:
+        #     return False
+        if 0.0<finger<28.0:
             return False
+        else:
+            return True
+    def vertify_index(finger):
+        if 0.0<finger<10.0:
+            return False
+        else:
+            return True
+    
+    def vertify_middle(finger):
+        if 0.0<finger<10.0:
+            return False
+        else:
+            return True
+    
+    def vertify_ring(finger):
+        if 0.0<finger<10.0:
+            return False
+        else:
+            return True
 
+    def vertify_pinky(finger):
+        if 0.2<finger<10.1:
+            return False
+        else:
+            return True
+            
     def hand_vertify(thumb,index,middle,ring,pinky):
-        if HandControlVolume.vertify(thumb,96.8,162.5) and HandControlVolume.vertify(index,0.0,7.4) and HandControlVolume.vertify(middle,90.7,146.5) and HandControlVolume.vertify(ring,75.7,147.5) and HandControlVolume.vertify(pinky,76.4,156.2):
-            return "1"
+        # if HandControlVolume.vertify(thumb,96.8,162.5) and HandControlVolume.vertify(index,0.0,7.4) and HandControlVolume.vertify(middle,90.7,146.5) and HandControlVolume.vertify(ring,75.7,147.5) and HandControlVolume.vertify(pinky,76.4,156.2):
+        #     return "1"
 
-        if HandControlVolume.vertify(thumb,98.7,162.1) and HandControlVolume.vertify(index,0.1,9.9) and HandControlVolume.vertify(middle,0.0,10.0) and HandControlVolume.vertify(ring,16.1,89.7) and HandControlVolume.vertify(pinky,2.1,25.0):
+        # if HandControlVolume.vertify(thumb,98.7,162.1) and HandControlVolume.vertify(index,0.1,9.9) and HandControlVolume.vertify(middle,0.0,10.0) and HandControlVolume.vertify(ring,16.1,89.7) and HandControlVolume.vertify(pinky,2.1,25.0):
+        #     return "2"
+        # return "0"
+        if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
+            return "1"
+        if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
             return "2"
-        return "0"
+        if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring)==False and HandControlVolume.vertify_pinky(pinky):
+            return "3"
+        if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring)==False and HandControlVolume.vertify_pinky(pinky)==False:
+            return "4"
+        if HandControlVolume.vertify_thumb(thumb)==False and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring)==False and HandControlVolume.vertify_pinky(pinky)==False:
+            return "5"
+        if HandControlVolume.vertify_thumb(thumb)==False and HandControlVolume.vertify_index(index) and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky)==False:
+            return "6"
+        if HandControlVolume.vertify_thumb(thumb)==False and HandControlVolume.vertify_index(index) and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
+            if 72.0<index<120.0:
+                return "7"
+            if index>125.0:
+                return "9"
+
+        if HandControlVolume.vertify_thumb(thumb)==False and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
+            return "8"
+        return ""
+
     # 主函数
     def recognize(self):
 
@@ -183,15 +232,6 @@ class HandControlVolume:
 
 
                         self.hand_result=HandControlVolume.hand_vertify(hand_angle_dict['thumb'],hand_angle_dict['index'],hand_angle_dict['middle'],hand_angle_dict['ring'],hand_angle_dict['pinky'])
-                        #解析手指手势
-                        # #1
-                        # if hand_angle_dict['thumb'] > 100 and hand_angle_dict['index'] < 10 and hand_angle_dict['middle'] > 100 and hand_angle_dict['ring'] and hand_angle_dict['pinky'] > 100:
-                        #     self.hand_result = '1'
-
-                        # #2
-                        # if hand_angle_dict['thumb'] > 100 and hand_angle_dict['index'] < 20 and hand_angle_dict['middle'] < 50 and hand_angle_dict['ring'] < 30 and hand_angle_dict['pinky'] < 50:
-                        #     self.hand_result = '2'
-                        
                         
 
                         print(hand_angle_dict)
