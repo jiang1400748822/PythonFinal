@@ -12,6 +12,8 @@ from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 import time
 import math
 import numpy as np
+import F_angle
+import F_vertify
 
 class HandControlVolume:
     def __init__(self):
@@ -39,118 +41,7 @@ class HandControlVolume:
         #手势模式
         self.model = 0
 
-    #角度计算函数
-    def angle_calc(a1,a2):
-        a1_x=a1[0]
-        a1_y=a1[1]
-
-        a2_x=a2[0]
-        a2_y=a2[1]
-
-        try:
-            angle= math.degrees(math.acos((a1_x*a2_x+a1_y*a2_y)/(((a1_x**2+a1_y**2)**0.5)*((a2_x**2+a2_y**2)**0.5))))
-        except:
-            angle =500.
-        if angle > 180.:
-            angle = 500.
-        return angle
-
-    #各个手指角度计算函数
-    def hand_angle(hands):
-        angle_list = {}
-        #------ thumb 大拇指角度
-        angle_thumb = HandControlVolume.angle_calc(
-                                ( (int(hands[1][1])- int(hands[2][1]))  ,  (int(hands[1][2])- int(hands[2][2]))  ),
-                                ( (int(hands[3][1])- int(hands[4][1]))  ,  (int(hands[3][2])- int(hands[4][2]))  )
-                            )
-        angle_list['thumb'] = angle_thumb
-
-        #------ index  食指角度
-        angle_index = HandControlVolume.angle_calc(
-            ( (int(hands[5][1])- int(hands[6][1]))  ,  (int(hands[5][2])- int(hands[6][2]))  ),
-            ( (int(hands[7][1])- int(hands[8][1]))  ,  (int(hands[7][2])- int(hands[8][2]))  )
-        )
-        angle_list['index'] = angle_index
-
-        #------ middle  中指角度
-        angle_middle = HandControlVolume.angle_calc(
-            ( (int(hands[9][1])- int(hands[10][1]))  ,  (int(hands[9][2])- int(hands[10][2]))  ),
-            ( (int(hands[11][1])- int(hands[12][1]))  ,  (int(hands[11][2])- int(hands[12][2]))  )
-        )
-        angle_list['middle'] = angle_middle
-
-        #------ ring  无名指角度
-        angle_ring = HandControlVolume.angle_calc(
-            ( (int(hands[13][1])- int(hands[14][1]))  ,  (int(hands[13][2])- int(hands[14][2]))  ),
-            ( (int(hands[15][1])- int(hands[16][1]))  ,  (int(hands[15][2])- int(hands[16][2]))  )
-        )
-        angle_list['ring'] = angle_ring
-
-        #------ pinky  无名指角度
-        angle_pinky = HandControlVolume.angle_calc(
-            ( (int(hands[17][1])- int(hands[18][1]))  ,  (int(hands[17][2])- int(hands[18][2]))  ),
-            ( (int(hands[19][1])- int(hands[20][1]))  ,  (int(hands[19][2])- int(hands[20][2]))  )
-        )
-        angle_list['pinky'] = angle_pinky
-
-        return angle_list
-
-    #判断手指是否弯曲q
-    def vertify_thumb(finger):
-        # if mi<finger<ma:
-        #     return True
-        # else:
-        #     return False
-        if 0.0<finger<28.0:
-            return False
-        else:
-            return True
-    def vertify_index(finger):
-        if 0.0<finger<10.0:
-            return False
-        else:
-            return True
-    
-    def vertify_middle(finger):
-        if 0.0<finger<10.0:
-            return False
-        else:
-            return True
-    
-    def vertify_ring(finger):
-        if 0.0<finger<10.0:
-            return False
-        else:
-            return True
-
-    def vertify_pinky(finger):
-        if 0.2<finger<10.1:
-            return False
-        else:
-            return True
-            
-    def hand_vertify(thumb,index,middle,ring,pinky):
-        if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
-            return "1"
-        if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
-            return "2"
-        if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring)==False and HandControlVolume.vertify_pinky(pinky):
-            return "3"
-        if HandControlVolume.vertify_thumb(thumb) and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring)==False and HandControlVolume.vertify_pinky(pinky)==False:
-            return "4"
-        if HandControlVolume.vertify_thumb(thumb)==False and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle)==False and HandControlVolume.vertify_ring(ring)==False and HandControlVolume.vertify_pinky(pinky)==False:
-            return "5"
-        if HandControlVolume.vertify_thumb(thumb)==False and HandControlVolume.vertify_index(index) and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky)==False:
-            return "6"
-        if HandControlVolume.vertify_thumb(thumb)==False and HandControlVolume.vertify_index(index) and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
-            if 72.0<index<120.0:
-                return "7"
-            if index>125.0:
-                return "9"
-
-        if HandControlVolume.vertify_thumb(thumb)==False and HandControlVolume.vertify_index(index)==False and HandControlVolume.vertify_middle(middle) and HandControlVolume.vertify_ring(ring) and HandControlVolume.vertify_pinky(pinky):
-            return "8"
-        return ""
+   
 
     # 主函数
     def recognize(self):
@@ -216,7 +107,7 @@ class HandControlVolume:
                         
                         #手指角度
                         self.hand_result = ''
-                        hand_angle_dict = HandControlVolume.hand_angle(landmark_list_pm)
+                        hand_angle_dict = F_angle.hand_angle(landmark_list_pm)
  
                         #手势值分析 
                         self.sum_thumb.append(hand_angle_dict['thumb'])
@@ -227,7 +118,7 @@ class HandControlVolume:
 
 
                         if self.model==1:
-                            self.hand_result=HandControlVolume.hand_vertify(hand_angle_dict['thumb'],hand_angle_dict['index'],hand_angle_dict['middle'],hand_angle_dict['ring'],hand_angle_dict['pinky'])
+                            self.hand_result=F_vertify.hand_vertify(hand_angle_dict['thumb'],hand_angle_dict['index'],hand_angle_dict['middle'],hand_angle_dict['ring'],hand_angle_dict['pinky'])
                             if self.hand_result=="1":
                                 self.volume.SetMasterVolumeLevel(-58.725, None)
                                 rect_percent_text = 10
