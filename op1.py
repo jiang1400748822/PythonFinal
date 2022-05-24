@@ -159,21 +159,22 @@ class HandControlVolume:
                         print(hand_angle_dict)
 
                         if landmark_list:
-                            # 获取大拇指指尖坐标
-                            thumb_finger_tip = landmark_list[4]
-                            thumb_finger_tip_x = math.ceil(thumb_finger_tip[1] * resize_w)
-                            thumb_finger_tip_y = math.ceil(thumb_finger_tip[2] * resize_h)
-                            # 获取食指指尖坐标
-                            index_finger_tip = landmark_list[8]
-                            index_finger_tip_x = math.ceil(index_finger_tip[1] * resize_w)
-                            index_finger_tip_y = math.ceil(index_finger_tip[2] * resize_h)
-                            # 中间点
-                            finger_middle_point = (thumb_finger_tip_x+index_finger_tip_x)//2, (thumb_finger_tip_y+index_finger_tip_y)//2
-                            # print(thumb_finger_tip_x)
-                            thumb_finger_point = (thumb_finger_tip_x,thumb_finger_tip_y)
-                            index_finger_point = (index_finger_tip_x,index_finger_tip_y) 
                             if self.model==0:
-                            # 画指尖2点
+                                # 获取大拇指指尖坐标
+                                thumb_finger_tip = landmark_list[4]
+                                thumb_finger_tip_x = math.ceil(thumb_finger_tip[1] * resize_w)
+                                thumb_finger_tip_y = math.ceil(thumb_finger_tip[2] * resize_h)
+                                # 获取食指指尖坐标
+                                index_finger_tip = landmark_list[8]
+                                index_finger_tip_x = math.ceil(index_finger_tip[1] * resize_w)
+                                index_finger_tip_y = math.ceil(index_finger_tip[2] * resize_h)
+                                # 中间点
+                                finger_middle_point = (thumb_finger_tip_x+index_finger_tip_x)//2, (thumb_finger_tip_y+index_finger_tip_y)//2
+                                # print(thumb_finger_tip_x)
+                                thumb_finger_point = (thumb_finger_tip_x,thumb_finger_tip_y)
+                                index_finger_point = (index_finger_tip_x,index_finger_tip_y) 
+                            
+                                # 画指尖2点
                                 image = cv2.circle(image,thumb_finger_point,10,(255,0,255),-1)
                                 image = cv2.circle(image,index_finger_point,10,(255,0,255),-1)
                                 image = cv2.circle(image,finger_middle_point,10,(255,0,255),-1)
